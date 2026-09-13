@@ -30,4 +30,4 @@ override.tf.json
 *_override.tf
 *_override.tf.json
 
-# Local secrets
+# Local secret

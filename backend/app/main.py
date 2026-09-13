@@ -10,8 +10,23 @@ from backend.app.schemas import (
     FeiraDetailResponse,
     FeiraResponse,
     NearbyFeiraResponse,
+    VendorFeiraCreate,
+    VendorFeiraResponse,
+    VendorRegistrationRequest,
+    VendorResponse,
 )
+# from backend.app.schemas import (
+#     FeiraDetailResponse,
+#     FeiraResponse,
+#     NearbyFeiraResponse,
+#     VendorRegistrationRequest,
+#     VendorResponse,
+# )
 
+from backend.app.services.vendor_service import (
+    associate_vendor_with_feira,
+    register_vendor,
+)
 
 app = FastAPI(
     title="São Paulo Feira Marketplace API",
@@ -49,6 +64,59 @@ def database_health_check():
         }
 
 
+# ==================================================
+# Vendor Registration
+# ==================================================
+
+@app.post(
+    "/api/v1/vendors/register",
+    response_model=VendorResponse,
+    status_code=201,
+)
+def register_vendor_endpoint(
+    registration_data: VendorRegistrationRequest,
+    db: Session = Depends(get_db),
+):
+    try:
+        return register_vendor(
+            db=db,
+            user_data=registration_data.user,
+            vendor_data=registration_data.vendor,
+        )
+
+    except ValueError as error:
+        raise HTTPException(
+            status_code=409,
+            detail=str(error),
+        )
+
+
+# ==================================================
+# Vendor-Feira Association
+# ==================================================
+
+@app.post(
+    "/api/v1/vendors/{vendor_id}/feiras",
+    response_model=VendorFeiraResponse,
+    status_code=201,
+)
+def associate_vendor_feira(
+    vendor_id: UUID,
+    relationship_data: VendorFeiraCreate,
+    db: Session = Depends(get_db),
+):
+    try:
+        return associate_vendor_with_feira(
+            db=db,
+            vendor_id=vendor_id,
+            feira_id=relationship_data.feira_id,
+        )
+
+    except ValueError as error:
+        raise HTTPException(
+            status_code=404,
+            detail=str(error),
+        )
 # ==================================================
 # List Feiras
 # ==================================================
